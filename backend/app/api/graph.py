@@ -94,6 +94,7 @@ def generate_ontology():
                 project.files.append({"filename": file_info["original_filename"], "size": file_info["size"]})
                 text = FileParser.extract_text(file_info["path"])
                 text = TextProcessor.preprocess_text(text)
+                text = text[:800]  # Cap text to 800 characters to prevent rate limits
                 document_texts.append(text)
                 all_text += f"\n\n=== {file_info['original_filename']} ===\n{text}"
 

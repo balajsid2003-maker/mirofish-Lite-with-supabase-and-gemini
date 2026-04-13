@@ -120,7 +120,7 @@ class GeminiService:
         system_prompt: str = "",
         json_mode: bool = False,
         temperature: float = 0.7,
-        max_retries: int = 3,
+        max_retries: int = 1,
         simulation_id: Optional[str] = None,
         use_cache: bool = True,
     ) -> str:

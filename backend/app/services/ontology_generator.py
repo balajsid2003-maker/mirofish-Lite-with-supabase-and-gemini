@@ -205,8 +205,8 @@ class OntologyGenerator:
         
         return result
     
-    # 传给 LLM 的文本最大长度（5万字）
-    MAX_TEXT_LENGTH_FOR_LLM = 50000
+    # 传给 LLM 的文本最大长度（Gemini Free Tier 优化）
+    MAX_TEXT_LENGTH_FOR_LLM = 2000
     
     def _build_user_message(
         self,
