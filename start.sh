@@ -97,7 +97,7 @@ fi
 
 # ── 4. Start backend ──────────────────────────────────────────────────────────
 info "[1/2] Starting backend  (Flask + Gemini + Supabase)…"
-(cd "$BACKEND_DIR" && uv run python3 run.py) > "$BACKEND_LOG" 2>&1 &
+(cd "$BACKEND_DIR" && uv run python run.py) > "$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 
 # Health-check loop: wait up to 20 s for the backend to respond
