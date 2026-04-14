@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from ..config import Config
-from ..utils.gemini_service import GeminiService
+from ..utils.llm_client import LLMClient
 from .supabase_entity_reader import EntityNode
 from .supabase_memory import get_memory
 
@@ -217,13 +217,10 @@ class OasisProfileGenerator:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,  # ignored, kept for compat
-        model_name: Optional[str] = None,  # ignored
-        zep_api_key: Optional[str] = None,  # ignored
         graph_id: Optional[str] = None,
+        **kwargs
     ):
-        self.gemini = GeminiService.get_instance()
+        self.llm_client = LLMClient()
         self.memory = get_memory()
         self.graph_id = graph_id
 
@@ -310,9 +307,11 @@ class OasisProfileGenerator:
         )
 
         try:
-            result = self.gemini.generate_json(
-                prompt=prompt,
-                system_prompt=SYSTEM_PROMPT,
+            result = self.llm_client.chat_json(
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.7,
             )
             if "bio" not in result or not result["bio"]:

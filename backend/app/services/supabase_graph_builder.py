@@ -12,8 +12,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 from ..config import Config
 from ..models.task import TaskManager, TaskStatus
-from ..utils.gemini_service import GeminiService
 from .supabase_memory import get_memory
+from ..utils.llm_client import LLMClient
 from .text_processor import TextProcessor
 
 logger = logging.getLogger("mirofish.supabase_graph_builder")
@@ -73,7 +73,7 @@ class SupabaseGraphBuilderService:
     """
 
     def __init__(self):
-        self.gemini = GeminiService.get_instance()
+        self.llm = LLMClient()
         self.memory = get_memory()
         self.task_manager = TaskManager()
 
@@ -159,11 +159,12 @@ class SupabaseGraphBuilderService:
                         entity_types=", ".join(entity_types),
                         edge_types=", ".join(edge_types),
                     )
-                    result = self.gemini.generate_json(
-                        prompt=prompt,
-                        system_prompt=EXTRACTION_SYSTEM_PROMPT,
+                    result = self.llm.chat_json(
+                        messages=[
+                            {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
+                            {"role": "user", "content": prompt}
+                        ],
                         temperature=0.2,
-                        use_cache=False,  # each chunk is unique
                     )
                     for node in result.get("nodes", []):
                         if not node.get("uuid"):

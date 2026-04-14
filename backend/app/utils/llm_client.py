@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from ..config import Config
 from .gemini_service import GeminiService
+from .groq_service import GroqService
 
 
 def _messages_to_prompt(messages: List[Dict[str, str]]) -> tuple[str, str]:
@@ -43,8 +44,16 @@ class LLMClient:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,  # kept for signature compat, unused
         model: Optional[str] = None,     # kept for signature compat, unused
+        provider: Optional[str] = None,
     ):
-        self._gemini = GeminiService.get_instance()
+        # Use provided provider, or default from config
+        self.provider = provider or Config.DEFAULT_LLM_PROVIDER
+        
+        if self.provider == "gemini":
+            self._llm = GeminiService.get_instance()
+        else:
+            # Default to Groq
+            self._llm = GroqService.get_instance()
 
     def chat(
         self,
@@ -60,7 +69,7 @@ class LLMClient:
             response_format is not None
             and response_format.get("type") == "json_object"
         )
-        return self._gemini.generate(
+        return self._llm.generate(
             prompt=user_prompt,
             system_prompt=system_prompt,
             json_mode=json_mode,
@@ -77,7 +86,7 @@ class LLMClient:
     ) -> Dict[str, Any]:
         """Send a chat request and return parsed JSON."""
         system_prompt, user_prompt = _messages_to_prompt(messages)
-        return self._gemini.generate_json(
+        return self._llm.generate_json(
             prompt=user_prompt,
             system_prompt=system_prompt,
             temperature=temperature,

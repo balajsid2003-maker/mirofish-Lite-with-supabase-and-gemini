@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 
 from ..config import Config
-from ..utils.gemini_service import GeminiService
+from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
 from .supabase_entity_reader import EntityNode, SupabaseEntityReader as ZepEntityReader
 
@@ -220,15 +220,10 @@ class SimulationConfigGenerator:
     AGENT_SUMMARY_LENGTH = 300           # Agent配置中的实体摘要
     ENTITIES_PER_TYPE_DISPLAY = 20       # 每类实体显示数量
     
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model_name: Optional[str] = None,
-    ):
-        self._gemini = GeminiService.get_instance()
-        self.model_name = model_name or "gemini-2.0-flash"
-        self.base_url = base_url or "http://localhost:5001"
+    def __init__(self, **kwargs):
+        self._llm = LLMClient()
+        self.model_name = "llama-3.3-70b-versatile"
+        self.base_url = "http://localhost:5001"
     
     def generate_config(
         self,
@@ -422,13 +417,14 @@ class SimulationConfigGenerator:
         return "\n".join(lines)
     
     def _call_llm_with_retry(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
-        """Call Gemini with retry and JSON parsing."""
+        """Call LLM with retry and JSON parsing."""
         try:
-            return self._gemini.generate_json(
-                prompt=prompt,
-                system_prompt=system_prompt,
+            return self._llm.chat_json(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.5,
-                use_cache=True,
             )
         except Exception as e:
             logger.warning("LLM call failed: %s", str(e)[:80])

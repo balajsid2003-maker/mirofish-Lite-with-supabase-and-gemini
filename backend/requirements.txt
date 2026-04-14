@@ -9,8 +9,9 @@
 flask>=3.0.0
 flask-cors>=6.0.0
 
-# ── LLM: Google Gemini 2.0 Flash ────────────────────────────
-google-generativeai>=0.8.0
+# ── LLM Providers ──────────────────────────────────────────
+google-genai>=1.2.0  # Used in current GeminiService
+groq>=0.11.0 
 
 # ── Memory: Supabase (PostgreSQL + pgvector) ─────────────────
 supabase>=2.0.0

@@ -27,6 +27,10 @@ class Config:
     # We unify this as LLM_API_KEY, falling back to GEMINI_API_KEY for compatibility.
     LLM_API_KEY = os.environ.get("LLM_API_KEY") or os.environ.get("GEMINI_API_KEY")
     GEMINI_API_KEY = LLM_API_KEY  # Alias for backward compatibility
+    
+    # GROQ
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+    DEFAULT_LLM_PROVIDER = os.environ.get("DEFAULT_LLM_PROVIDER", "groq").lower()
 
     # ── Supabase (PostgreSQL + pgvector) ──────────────────────────────────────
     SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -77,6 +81,8 @@ class Config:
         errors = []
         if not cls.LLM_API_KEY:
             errors.append("LLM_API_KEY (or GEMINI_API_KEY) is not configured")
+        if cls.DEFAULT_LLM_PROVIDER == "groq" and not cls.GROQ_API_KEY:
+            errors.append("GROQ_API_KEY is not configured but DEFAULT_LLM_PROVIDER is groq")
         if not cls.SUPABASE_URL:
             errors.append("SUPABASE_URL is not configured")
         if not cls.SUPABASE_KEY:
