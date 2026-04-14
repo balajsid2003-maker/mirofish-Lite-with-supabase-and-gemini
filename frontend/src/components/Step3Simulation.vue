@@ -679,6 +679,9 @@ const handleNextStep = async () => {
   }
   
   isGeneratingReport.value = true
+  addLog('正在启动报告生成...')
+  
+  try {
     const pending = getPendingUpload()
     const useLiteMode = pending.useLiteMode || false
 
