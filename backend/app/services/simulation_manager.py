@@ -236,7 +236,8 @@ class SimulationManager:
         defined_entity_types: Optional[List[str]] = None,
         use_llm_for_profiles: bool = True,
         progress_callback: Optional[callable] = None,
-        parallel_profile_count: int = 3
+        parallel_profile_count: int = 3,
+        use_lite_mode: bool = False
     ) -> SimulationState:
         """
         准备模拟环境（全程自动化）
@@ -265,6 +266,11 @@ class SimulationManager:
             raise ValueError(f"模拟不存在: {simulation_id}")
         
         try:
+            # Force zero-cost settings if in Lite mode
+            if use_lite_mode:
+                logger.info(f"Micro-Lite Mode Enabled for {simulation_id} - Forcing zero-cost profiles & config.")
+                use_llm_for_profiles = False
+
             state.status = SimulationStatus.PREPARING
             self._save_simulation_state(state)
             
@@ -397,21 +403,32 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_config", 30, 
-                    "正在调用LLM生成配置...",
+                    "Generating system configuration...",
                     current=1,
                     total=3
                 )
             
-            sim_params = config_generator.generate_config(
-                simulation_id=simulation_id,
-                project_id=state.project_id,
-                graph_id=state.graph_id,
-                simulation_requirement=simulation_requirement,
-                document_text=document_text,
-                entities=filtered.entities,
-                enable_twitter=state.enable_twitter,
-                enable_reddit=state.enable_reddit
-            )
+            if use_lite_mode:
+                sim_params = config_generator.generate_lite_config(
+                    simulation_id=simulation_id,
+                    project_id=state.project_id,
+                    graph_id=state.graph_id,
+                    simulation_requirement=simulation_requirement,
+                    entities=filtered.entities,
+                    enable_twitter=state.enable_twitter,
+                    enable_reddit=state.enable_reddit
+                )
+            else:
+                sim_params = config_generator.generate_config(
+                    simulation_id=simulation_id,
+                    project_id=state.project_id,
+                    graph_id=state.graph_id,
+                    simulation_requirement=simulation_requirement,
+                    document_text=document_text,
+                    entities=filtered.entities,
+                    enable_twitter=state.enable_twitter,
+                    enable_reddit=state.enable_reddit
+                )
             
             if progress_callback:
                 progress_callback(

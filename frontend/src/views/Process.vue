@@ -589,7 +589,13 @@ const handleNewProject = async () => {
     pending.files.forEach(file => {
       formDataObj.append('files', file)
     })
+    const useLiteMode = pending.useLiteMode || false
     formDataObj.append('simulation_requirement', pending.simulationRequirement)
+    formDataObj.append('use_lite_mode', useLiteMode ? 'true' : 'false')
+
+    if (useLiteMode) {
+      ontologyProgress.value.message = '🚀 [Micro-Lite] 极速已激活 - 正在快速分析文档...'
+    }
     
     // 调用本体生成 API
     const response = await generateOntology(formDataObj)
@@ -688,7 +694,17 @@ const startBuildGraph = async () => {
       message: '正在启动图谱构建...'
     }
     
-    const response = await buildGraph({ project_id: currentProjectId.value })
+    const pending = getPendingUpload()
+    const useLiteMode = pending.useLiteMode || false
+
+    if (useLiteMode) {
+      buildProgress.value.message = '🚀 [Micro-Lite] 极速已激活 - 正在快速构建图谱...'
+    }
+
+    const response = await buildGraph({ 
+      project_id: currentProjectId.value,
+      use_lite_mode: useLiteMode
+    })
     
     if (response.success) {
       buildProgress.value.message = '图谱构建任务已启动...'

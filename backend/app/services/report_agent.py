@@ -2636,3 +2636,72 @@ class ReportManager:
             deleted = True
         
         return deleted
+    def generate_lite_report(
+        self,
+        simulation_id: str,
+        graph_id: str,
+        simulation_requirement: str,
+        report_id: str,
+        progress_callback: Optional[Callable[[int, str], None]] = None
+    ) -> Report:
+        """
+        Micro-Lite Reporting: 100% efficient single-pass report.
+        Reduces API usage from ~10 calls to exactly 1 call.
+        """
+        logger.info(f"Generating Micro-Lite report for simulation {simulation_id}")
+        if progress_callback: progress_callback(10, "Fetching simulation data...")
+        
+        # 1. Fetch data in one go (0 LLM calls)
+        tools = ZepToolsService()
+        context = tools.get_simulation_context(graph_id, simulation_requirement)
+        facts = context.get("related_facts", [])
+        
+        if progress_callback: progress_callback(40, "Synthesizing lite report...")
+        
+        # 2. Single LLM call to synthesize everything (1 LLM call)
+        prompt = f"""
+        Draft a concise 'Simulation Executive Summary' based on these findings:
+        Requirement: {simulation_requirement}
+        Key Facts from Simulation: {json.dumps(facts, ensure_ascii=False)}
+        
+        Structure:
+        1. Core Discovery (One paragraph)
+        2. Agent Reactions (Bullet points)
+        3. Strategic Recommendation (One sentence)
+        
+        Language: Chinese. No Markdown titles, just bold text and bullets.
+        """
+        
+        try:
+            llm = LLMClient()
+            response = llm.chat(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3
+            )
+            
+            report = Report(
+                report_id=report_id,
+                simulation_id=simulation_id,
+                graph_id=graph_id,
+                simulation_requirement=simulation_requirement,
+                status=ReportStatus.COMPLETED,
+                markdown_content=response,
+                created_at=datetime.now().isoformat(),
+                completed_at=datetime.now().isoformat()
+            )
+            
+            # Save to disk
+            report_dir = os.path.join(Config.UPLOAD_FOLDER, 'reports', report_id)
+            os.makedirs(report_dir, exist_ok=True)
+            with open(os.path.join(report_dir, 'report.json'), 'w', encoding='utf-8') as f:
+                json.dump(report.to_dict(), f, ensure_ascii=False, indent=2)
+            with open(os.path.join(report_dir, 'report.md'), 'w', encoding='utf-8') as f:
+                f.write(response)
+                
+            if progress_callback: progress_callback(100, "Lite report generated.")
+            return report
+            
+        except Exception as e:
+            logger.error(f"Lite report failed: {e}")
+            return Report(report_id=report_id, simulation_id=simulation_id, graph_id=graph_id, 
+                        simulation_requirement=simulation_requirement, status=ReportStatus.FAILED, error=str(e))

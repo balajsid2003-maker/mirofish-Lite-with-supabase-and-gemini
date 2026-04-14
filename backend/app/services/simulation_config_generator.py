@@ -224,6 +224,76 @@ class SimulationConfigGenerator:
         self._llm = LLMClient()
         self.model_name = "llama-3.3-70b-versatile"
         self.base_url = "http://localhost:5001"
+
+    def generate_lite_config(
+        self,
+        simulation_id: str,
+        project_id: str,
+        graph_id: str,
+        simulation_requirement: str,
+        entities: List[EntityNode],
+        enable_twitter: bool = True,
+        enable_reddit: bool = True,
+    ) -> SimulationParameters:
+        """
+        Generates a 100% hardcoded "Micro-Lite" configuration.
+        Zero API calls. Optimized for 3 rounds and minimal agent activity.
+        """
+        logger.info(f"Generating Micro-Lite hardcoded config for simulation: {simulation_id}")
+        
+        # 1. Micro-Lite Time Config (3 rounds, very slow/restricted activity)
+        time_config = TimeSimulationConfig(
+            total_simulation_hours=3,
+            minutes_per_round=60,
+            agents_per_hour_min=1,
+            agents_per_hour_max=1,  # Force only 1 agent at a time
+            peak_hours=[],          # Neutral peak
+            off_peak_hours=list(range(0, 24)), # All house are treated as neutral/low
+            off_peak_activity_multiplier=1.0   # Keep it simple
+        )
+
+        # 2. Basic Event Config
+        event_config = EventConfig(
+            hot_topics=["Discussion", "Information"],
+            narrative_direction="Neutral information sharing",
+            initial_posts=[{
+                "content": f"Starting a discussion regarding: {simulation_requirement[:100]}",
+                "poster_type": entities[0].get_entity_type() or "User",
+                "poster_agent_id": 1
+            }]
+        )
+
+        # 3. Basic Agent Configs (Rule-based derivation)
+        agent_configs = []
+        for i, e in enumerate(entities):
+            etype = (e.get_entity_type() or "User").lower()
+            lvl = 0.2 if etype in ("official", "university") else 0.5
+            
+            agent_configs.append(AgentActivityConfig(
+                agent_id=i + 1,
+                entity_uuid=e.uuid,
+                entity_name=e.name,
+                entity_type=etype,
+                activity_level=lvl,
+                posts_per_hour=0.5,
+                comments_per_hour=1.0,
+                active_hours=list(range(0, 24)),
+                influence_weight=1.5 if etype in ("official", "mediaoutlet") else 1.0
+            ))
+
+        return SimulationParameters(
+            simulation_id=simulation_id,
+            project_id=project_id,
+            graph_id=graph_id,
+            simulation_requirement=simulation_requirement,
+            time_config=time_config,
+            agent_configs=agent_configs,
+            event_config=event_config,
+            twitter_config=PlatformConfig(platform="twitter") if enable_twitter else None,
+            reddit_config=PlatformConfig(platform="reddit") if enable_reddit else None,
+            llm_model="rule-based",
+            generation_reasoning="Micro-Lite Mode: Hardcoded rules applied to save 4+ API calls."
+        )
     
     def generate_config(
         self,

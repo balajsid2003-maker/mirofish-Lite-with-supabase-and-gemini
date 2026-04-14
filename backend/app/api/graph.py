@@ -73,6 +73,7 @@ def generate_ontology():
         simulation_requirement = request.form.get("simulation_requirement", "")
         project_name = request.form.get("project_name", "Unnamed Project")
         additional_context = request.form.get("additional_context", "")
+        use_lite_mode = request.form.get("use_lite_mode", "false").lower() == "true"
 
         if not simulation_requirement:
             return jsonify({"success": False, "error": "请提供模拟需求描述 (simulation_requirement)"}), 400
@@ -94,7 +95,9 @@ def generate_ontology():
                 project.files.append({"filename": file_info["original_filename"], "size": file_info["size"]})
                 text = FileParser.extract_text(file_info["path"])
                 text = TextProcessor.preprocess_text(text)
-                text = text[:800]  # Cap text to 800 characters to prevent rate limits
+                # Lite mode uses first 2000 chars as requested. Pro mode uses 10000 (increased from 800 for better analysis).
+                limit = 2000 if use_lite_mode else 10000 
+                text = text[:limit]
                 document_texts.append(text)
                 all_text += f"\n\n=== {file_info['original_filename']} ===\n{text}"
 
@@ -201,6 +204,7 @@ def build_graph():
             graph_name=graph_name,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            use_lite_mode=data.get("use_lite_mode", False)
         )
 
         # Recover graph_id from task metadata

@@ -323,6 +323,7 @@ import {
   getRunStatusDetail
 } from '../api/simulation'
 import { generateReport } from '../api/report'
+import { getPendingUpload } from '../store/pendingUpload'
 
 const props = defineProps({
   simulationId: String,
@@ -678,12 +679,17 @@ const handleNextStep = async () => {
   }
   
   isGeneratingReport.value = true
-  addLog('正在启动报告生成...')
-  
-  try {
+    const pending = getPendingUpload()
+    const useLiteMode = pending.useLiteMode || false
+
+    if (useLiteMode) {
+      addLog('🚀 [Micro-Lite] 模式已激活 - 将生成单一摘要报告（极速版）')
+    }
+
     const res = await generateReport({
       simulation_id: props.simulationId,
-      force_regenerate: true
+      force_regenerate: true,
+      use_lite_mode: useLiteMode
     })
     
     if (res.success && res.data) {

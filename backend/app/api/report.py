@@ -57,6 +57,7 @@ def generate_report():
             }), 400
         
         force_regenerate = data.get('force_regenerate', False)
+        use_lite_mode = data.get('use_lite_mode', False)
         
         # 获取模拟信息
         manager = SimulationManager()
@@ -146,10 +147,20 @@ def generate_report():
                     )
                 
                 # 生成报告（传入预先生成的 report_id）
-                report = agent.generate_report(
-                    progress_callback=progress_callback,
-                    report_id=report_id
-                )
+                if use_lite_mode:
+                    report = agent.generate_lite_report(
+                        progress_callback=progress_callback,
+                        report_id=report_id,
+                        simulation_id=simulation_id,
+                        graph_id=graph_id,
+                        simulation_requirement=simulation_requirement
+                    )
+                else:
+                    report = agent.generate_report(
+                        progress_callback=progress_callback,
+                        report_id=report_id
+                    )
+    
                 
                 # 保存报告
                 ReportManager.save_report(report)

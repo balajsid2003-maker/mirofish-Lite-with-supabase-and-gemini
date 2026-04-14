@@ -647,6 +647,7 @@ import {
   getSimulationConfigRealtime,
   startSimulation
 } from '../api/simulation'
+import { getPendingUpload } from '../store/pendingUpload'
 
 const props = defineProps({
   simulationId: String,  // 从父组件传入
@@ -810,18 +811,25 @@ const startPrepareSimulation = async () => {
     emit('update-status', 'error')
     return
   }
-  
+
+  const pending = getPendingUpload()
+  const useLiteMode = pending.useLiteMode || false
+
   // 标记第一步完成，开始第二步
   phase.value = 1
   addLog(`模拟实例已创建: ${props.simulationId}`)
+  if (useLiteMode) {
+    addLog('🚀 [Micro-Lite] 极速仿真模式已激活 - 将采用规则人设与精简配置')
+  }
   addLog('正在准备模拟环境...')
   emit('update-status', 'processing')
   
   try {
     const res = await prepareSimulation({
       simulation_id: props.simulationId,
-      use_llm_for_profiles: true,
-      parallel_profile_count: 5
+      use_llm_for_profiles: !useLiteMode, // Lite mode forces rule-based
+      parallel_profile_count: 5,
+      use_lite_mode: useLiteMode
     })
     
     if (res.success && res.data) {

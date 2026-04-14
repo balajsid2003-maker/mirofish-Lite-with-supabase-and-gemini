@@ -324,37 +324,52 @@ class OasisProfileGenerator:
             return self._rule_based(entity_type, entity_name, entity_summary)
 
     def _rule_based(self, entity_type: str, name: str, summary: str) -> Dict[str, Any]:
+        """Provides rich, zero-cost personas without LLM calls."""
         et = entity_type.lower()
-        if et in ("student", "alumni"):
+        base_bio = summary[:200] if summary else f"Member of the {entity_type} community."
+        
+        # Extended types for better variety in Lite mode
+        if et in ("student", "alumni", "undergraduate", "graduate"):
             return {
-                "bio": f"{entity_type} passionate about academics and social issues.",
-                "persona": f"{name} is a {et} actively engaged in academic and social discussions.",
-                "age": random.randint(18, 30),
+                "bio": f"{entity_type} at the university. {base_bio}",
+                "persona": f"{name} is an active {et} interested in campus life and social trends.",
+                "age": random.randint(18, 28),
                 "gender": random.choice(["male", "female"]),
                 "mbti": random.choice(MBTI_TYPES),
                 "country": "中国",
-                "profession": "Student",
-                "interested_topics": ["Education", "Social Issues", "Technology"],
+                "profession": entity_type.capitalize(),
+                "interested_topics": ["Education", "Campus Life", "Career", "Gaming"],
             }
-        elif et in ("professor", "expert", "faculty"):
+        elif et in ("professor", "expert", "faculty", "researcher", "scholar"):
             return {
-                "bio": f"Expert and thought leader in their field.",
-                "persona": f"{name} is a recognized {et} sharing insights on important matters.",
-                "age": random.randint(35, 65),
+                "bio": f"Academic {entity_type}. {base_bio}",
+                "persona": f"{name} is a {et} providing professional insights and mentorship.",
+                "age": random.randint(32, 65),
                 "gender": random.choice(["male", "female"]),
                 "mbti": random.choice(MBTI_TYPES),
                 "country": "中国",
-                "profession": entity_type,
-                "interested_topics": ["Research", "Policy", "Innovation"],
+                "profession": entity_type.capitalize(),
+                "interested_topics": ["Research", "Innovation", "Policy", "Knowledge"],
+            }
+        elif et in ("mediaoutlet", "journalist", "official", "news"):
+            return {
+                "bio": f"Official {entity_type} account. Delivering news and updates.",
+                "persona": f"{name} is an official {et} account focused on reporting and transparency.",
+                "age": 35,
+                "gender": "other",
+                "mbti": "ENTJ",
+                "country": "中国",
+                "profession": "Information Services",
+                "interested_topics": ["Current Events", "Policy", "News", "Official Announcements"],
             }
         else:
             return {
-                "bio": summary[:200] if summary else f"{entity_type}: {name}",
-                "persona": summary or f"{name} is a {entity_type} participating in discussion.",
-                "age": 30,
-                "gender": "other",
+                "bio": base_bio,
+                "persona": f"{name} is representing {entity_type} in this discussion.",
+                "age": random.randint(22, 50),
+                "gender": random.choice(["male", "female", "other"]),
                 "mbti": random.choice(MBTI_TYPES),
                 "country": "中国",
-                "profession": entity_type,
-                "interested_topics": [],
+                "profession": entity_type.capitalize(),
+                "interested_topics": ["General Discussion", "Community", "Social Trends"],
             }

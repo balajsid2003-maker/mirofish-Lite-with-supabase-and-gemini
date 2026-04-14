@@ -182,6 +182,22 @@
                 ></textarea>
                 <div class="model-badge">引擎: MiroFish-V1.0</div>
               </div>
+              
+              <!-- Lite Mode Toggle -->
+              <div class="lite-mode-wrapper" :class="{ 'active': formData.useLiteMode }">
+                <label class="lite-mode-label">
+                  <input type="checkbox" v-model="formData.useLiteMode" style="display:none" />
+                  <div class="custom-checkbox">
+                    <div class="checkbox-box">
+                      <div class="checkbox-inner"></div>
+                    </div>
+                    <div class="checkbox-text">
+                      <span class="main-text">Micro-Lite 模式</span>
+                      <span class="sub-text">极速模拟 | 节省 90% API 消耗</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <!-- 启动按钮 -->
@@ -215,7 +231,8 @@ const router = useRouter()
 
 // 表单数据
 const formData = ref({
-  simulationRequirement: ''
+  simulationRequirement: '',
+  useLiteMode: false
 })
 
 // 文件列表
@@ -294,7 +311,7 @@ const startSimulation = () => {
   
   // 存储待上传的数据
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
-    setPendingUpload(files.value, formData.value.simulationRequirement)
+    setPendingUpload(files.value, formData.value.simulationRequirement, formData.value.useLiteMode)
     
     // 立即跳转到Process页面（使用特殊标识表示新建项目）
     router.push({
@@ -886,5 +903,75 @@ const startSimulation = () => {
     max-width: 200px;
     margin-bottom: 20px;
   }
+}
+
+/* Lite Mode Toggle Styles */
+.lite-mode-wrapper {
+  margin-top: 15px;
+  padding: 12px;
+  border: 1px solid #EEE;
+  background: #FAFAFA;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.lite-mode-wrapper.active {
+  border-color: var(--orange);
+  background: rgba(255, 69, 0, 0.02);
+}
+
+.lite-mode-label {
+  display: block;
+  cursor: pointer;
+}
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkbox-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #DDD;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.lite-mode-wrapper.active .checkbox-box {
+  border-color: var(--orange);
+}
+
+.checkbox-inner {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: var(--orange);
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lite-mode-wrapper.active .checkbox-inner {
+  transform: scale(1);
+}
+
+.checkbox-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-text {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.sub-text {
+  font-size: 0.7rem;
+  color: #999;
+  font-family: var(--font-mono);
 }
 </style>
