@@ -85,6 +85,7 @@ class SupabaseGraphBuilderService:
         chunk_size: int = 500,
         chunk_overlap: int = 50,
         batch_size: int = CHUNKS_PER_EXTRACTION_CALL,
+        use_lite_mode: bool = False,
     ) -> str:
         """Start async graph build. Returns task_id."""
         graph_id = f"mirofish_{uuid.uuid4().hex[:16]}"
@@ -101,7 +102,7 @@ class SupabaseGraphBuilderService:
 
         thread = threading.Thread(
             target=self._build_worker,
-            args=(task_id, graph_id, text, ontology, chunk_size, chunk_overlap, batch_size),
+            args=(task_id, graph_id, text, ontology, chunk_size, chunk_overlap, batch_size, use_lite_mode),
             daemon=True,
         )
         thread.start()
@@ -116,6 +117,7 @@ class SupabaseGraphBuilderService:
         chunk_size: int,
         chunk_overlap: int,
         batch_size: int,
+        use_lite_mode: bool = False,
     ):
         """Worker thread: extract entities and store in Supabase."""
         try:
